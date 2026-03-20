@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIPO.IO</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div class="hud">
+    <div class="massBox">
+      <div class="massLabel">Mass</div>
+      <div class="massValue" id="massValue">0</div>
+    </div>
+
+    <div class="leaderboard gameLeaderboard" id="gameLeaderboard">
+      <div class="leaderboardTitle">Leaderboard</div>
+      <div class="leaderboardEntries" id="gameLeaderboardEntries"></div>
+    </div>
+  </div>
+
+  <div class="chatBox" id="chatBox">
+    <div class="chatMessages" id="chatMessages"></div>
+    <input
+      type="text"
+      id="chatInput"
+      class="chatInput"
+      placeholder="Type message and press Enter..."
+      maxlength="160"
+    />
+  </div>
+
+  <div class="postMatchOverlay hidden" id="postMatchOverlay">
+    <div class="postMatchCard" id="postMatchCard">
+      <h2 class="postMatchTitle" id="postMatchTitle">Match Report</h2>
+      <div class="postMatchDetails" id="postMatchDetails"></div>
+      <div class="postMatchSpectateStatus" id="postMatchSpectateStatus">You are not spectating.</div>
+      <div class="postMatchActions">
+        <button type="button" id="postMatchSpectateBtn">Spectate players</button>
+        <button type="button" id="postMatchQuitBtn" class="secondaryButton">Quit to menu</button>
+      </div>
+      <div class="postMatchHint">Tip: while spectating, use ← / → to switch players.</div>
+    </div>
+  </div>
+
+  <div class="landingScreen" id="landingScreen">
+    <div class="moneyBg" id="moneyBg"></div>
+
+    <div class="landingPanel">
+      <h1>PIPO.IO</h1>
+      <p>Grow bigger. Dominate the map.</p>
+      <button id="startMenuBtn">PLAY</button>
+    </div>
+
+    <div class="authPanel hidden" id="authPanel">
+      <h2>Account</h2>
+      <input id="authUsername" type="text" placeholder="Username" maxlength="20" />
+      <input id="authPassword" type="password" placeholder="Password" maxlength="64" />
+
+      <div class="authButtons">
+        <button id="registerBtn" type="button">Register</button>
+        <button id="loginBtn" type="button">Login</button>
+        <button id="logoutBtn" type="button" class="hidden">Logout</button>
+      </div>
+
+      <div id="authStatus"></div>
+    </div>
+  </div>
+
+  <div class="menu hidden" id="menu">
+    <div class="ballsBg" id="menuBallsBg"></div>
+
+    <div class="menuShell">
+      <div class="sideColumn">
+        <div class="menuCard casinoCard">
+          <div class="cardHeader">
+            <span>🎰 Casino</span>
+            <span class="liveBadge casinoSoonBadge">Live</span>
+          </div>
+
+          <div class="casinoBody">
+            <div class="casinoIntro">Side games for quick bets while you wait for the arena.</div>
+            <div class="casinoButtons">
+              <button id="blackjackOpenBtn" type="button" class="casinoBtn blackjackLaunchBtn">Blackjack</button>
+              <button id="rouletteOpenBtn" type="button" class="casinoBtn rouletteLaunchBtn">Roulette</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="menuCard leaderboardCard">
+          <div class="cardHeader">
+            <span>🏆 Richest Players</span>
+            <span class="liveBadge">Top 10</span>
+          </div>
+          <div class="leaderboardEntries" id="menuLeaderboardEntries"></div>
+        </div>
+
+        <div class="menuCard friendsCard">
+          <div class="cardHeader">
+            <span>👥 Friends</span>
+            <button id="toggleFriendSearchBtn" type="button" class="miniCardBtn">Add</button>
+          </div>
+
+          <div class="friendsSection">
+            <div class="friendsSubTitle">Your friends</div>
+            <div class="friendsList" id="friendsList">
+              <div class="emptyCardText">No friends yet.</div>
+            </div>
+          </div>
+
+          <div class="friendSearchPanel hidden" id="friendSearchPanel">
+            <input
+              id="friendSearchInput"
+              type="text"
+              placeholder="Search account name..."
+              maxlength="20"
+            />
+            <div class="friendSearchResults" id="friendSearchResults"></div>
+          </div>
+
+          <div class="friendsSection">
+            <div class="friendsSubTitle">Requests</div>
+            <div class="friendRequestsList" id="friendRequestsList">
+              <div class="emptyCardText">No pending requests.</div>
+            </div>
+          </div>
+
+          <div class="friendsStatus" id="friendsStatus"></div>
+        </div>
+
+        <div class="menuCard privateChatCard hidden" id="privateChatCard">
+          <div class="cardHeader">
+            <span id="privateChatTitle">Private Chat</span>
+            <button id="closePrivateChatBtn" type="button" class="miniCardBtn">Close</button>
+          </div>
+
+          <div class="privateChatMessages" id="privateChatMessages"></div>
+
+          <div class="privateChatInputRow">
+            <input
+              id="privateChatInput"
+              type="text"
+              maxlength="500"
+              placeholder="Type a private message..."
+            />
+            <button id="sendPrivateChatBtn" type="button">Send</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="centerColumn">
+        <div class="menuCard mainPlayCard">
+          <h1>PIPO.IO</h1>
+          <p>Choose your name and amount to enter the arena.</p>
+
+          <input
+            id="nameInput"
+            type="text"
+            maxlength="16"
+            placeholder="Nickname"
+            value="Player"
+          />
+
+          <div class="stakeSection">
+            <div class="stakeTitle">Choose amount</div>
+            <div class="stakeButtons">
+              <button class="stakeBtn active" data-stake="1" type="button">$1</button>
+              <button class="stakeBtn" data-stake="5" type="button">$5</button>
+              <button class="stakeBtn" data-stake="10" type="button">$10</button>
+              <button class="stakeBtn" data-stake="20" type="button">$20</button>
+            </div>
+          </div>
+
+          <button id="playBtn" class="mainJoinBtn">JOIN GAME</button>
+
+          <div id="menuStatus" class="menuStatus"></div>
+
+          <div class="smallInfo">
+            Move mouse to move · Space to split · W to eject · Q hold to extract · \ to chat
+          </div>
+        </div>
+      </div>
+
+      <div class="sideColumn">
+        <div class="menuCard walletCard" id="walletCard">
+          <div class="cardHeader">
+            <span>💼 Wallet</span>
+          </div>
+
+          <div class="walletBalanceBig" id="walletValue">$0.00</div>
+
+          <input
+            id="walletAmountInput"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="Amount in €"
+          />
+
+          <input
+            id="withdrawAddressInput"
+            type="text"
+            maxlength="80"
+            placeholder="Solana wallet address"
+          />
+
+          <div class="walletButtons">
+            <button id="addBalanceBtn" type="button">Add Funds</button>
+            <button id="withdrawBtn" type="button" class="secondaryButton">Cash Out</button>
+          </div>
+
+          <div class="walletHint">1 EUR = 1 wallet credit</div>
+          <div class="walletStatus" id="walletStatus"></div>
+        </div>
+
+        <div class="menuCard customizeCard">
+          <div class="cardHeader">
+            <span>🎨 Customize</span>
+          </div>
+
+          <div class="customizeBody">
+            <div class="colorRow colorPickerRow">
+              <label>Ball color</label>
+              <input id="colorInput" type="hidden" value="#3b82f6" />
+              <div class="colorSwatches" id="colorSwatches">
+                <button type="button" class="colorSwatch" data-color="#111111" data-color-name="Black" aria-label="Black" title="Black" style="--swatch-color:#111111;"></button>
+                <button type="button" class="colorSwatch" data-color="#ef4444" data-color-name="Red" aria-label="Red" title="Red" style="--swatch-color:#ef4444;"></button>
+                <button type="button" class="colorSwatch" data-color="#ec4899" data-color-name="Pink" aria-label="Pink" title="Pink" style="--swatch-color:#ec4899;"></button>
+                <button type="button" class="colorSwatch" data-color="#8b5cf6" data-color-name="Purple" aria-label="Purple" title="Purple" style="--swatch-color:#8b5cf6;"></button>
+                <button type="button" class="colorSwatch" data-color="#facc15" data-color-name="Yellow" aria-label="Yellow" title="Yellow" style="--swatch-color:#facc15;"></button>
+                <button type="button" class="colorSwatch" data-color="#f97316" data-color-name="Orange" aria-label="Orange" title="Orange" style="--swatch-color:#f97316;"></button>
+                <button type="button" class="colorSwatch" data-color="#8b5a2b" data-color-name="Brown" aria-label="Brown" title="Brown" style="--swatch-color:#8b5a2b;"></button>
+                <button type="button" class="colorSwatch" data-color="#9ca3af" data-color-name="Grey" aria-label="Grey" title="Grey" style="--swatch-color:#9ca3af;"></button>
+                <button type="button" class="colorSwatch" data-color="#3b82f6" data-color-name="Blue" aria-label="Blue" title="Blue" style="--swatch-color:#3b82f6;"></button>
+              </div>
+            </div>
+
+            <div class="colorPreviewWrap">
+              <div class="colorPreviewText">
+                <div class="colorPreviewLabel">Preview</div>
+                <div class="colorPreviewName" id="colorPreviewName">Blue</div>
+              </div>
+              <div class="colorPreviewLabel">Preview</div>
+              <div class="colorPreviewBall" id="colorPreviewBall"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menuMusicPlayer" id="menuMusicPlayer">
+      <div class="musicTopRow">
+        <button id="musicCloseBtn" type="button" class="musicCloseBtn" aria-label="Close music player">✕</button>
+        <div class="musicNowLabel">Now Playing</div>
+        <div class="musicSongName" id="musicSongName">No song loaded</div>
+      </div>
+
+      <div class="musicControlsRow">
+        <button id="musicPrevBtn" type="button" class="musicControlBtn">⏮</button>
+        <button id="musicPlayPauseBtn" type="button" class="musicControlBtn primary">▶</button>
+        <button id="musicNextBtn" type="button" class="musicControlBtn">⏭</button>
+      </div>
+
+      <div class="musicVolumeRow">
+        <span class="musicVolumeLabel">Volume</span>
+        <input id="musicVolumeRange" type="range" min="0" max="1" step="0.01" value="0.4" />
+      </div>
+    </div>
+
+    <audio id="menuMusic" preload="auto"></audio>
+
+    <div class="casinoOverlay hidden" id="rouletteOverlay">
+      <div class="rouletteModal">
+        <div class="rouletteModalHeader">
+          <div class="rouletteHeaderLeft">
+            <div class="rouletteModalTitle">🎰 Roulette</div>
+            <div class="rouletteBalanceRow">Balance: <span class="rouletteBalanceValue" id="rouletteBalanceValue">$0.00</span></div>
+          </div>
+          <div class="rouletteHeaderRight">
+            <div class="rouletteStakeRow">Stake: <span id="rouletteTotalStake">$0.00</span></div>
+            <button id="rouletteClearBtn" type="button" class="rouletteClearBtn">Clear</button>
+            <button id="rouletteSpinBtn" type="button" class="rouletteSpinBtn">SPIN</button>
+            <button id="closeRouletteBtn" type="button" class="miniCardBtn">✕</button>
+          </div>
+        </div>
+
+        <!-- Chip selector -->
+        <div class="rouletteChipBar">
+          <span class="rouletteChipBarLabel">Chip:</span>
+          <button type="button" class="rouletteChip chip-50 active" data-chip="0.5">50¢</button>
+          <button type="button" class="rouletteChip chip-1" data-chip="1">$1</button>
+          <button type="button" class="rouletteChip chip-2" data-chip="2">$2</button>
+          <button type="button" class="rouletteChip chip-5" data-chip="5">$5</button>
+          <span class="rouletteChipHint">Click a number to place · max $5 per number</span>
+        </div>
+
+        <div class="rouletteModalBody">
+          <!-- Betting table -->
+          <div class="rouletteTableWrap">
+            <div class="rouletteTable" id="rouletteTable"></div>
+          </div>
+
+          <!-- Wheel panel -->
+          <div class="rouletteWheelPanel">
+            <div class="rouletteWheelStage">
+              <div class="rouletteArrow" aria-hidden="true"></div>
+              <div class="rouletteWheelFrame">
+                <canvas id="rouletteWheelCanvas" width="560" height="560"></canvas>
+              </div>
+            </div>
+            <div class="rouletteResultCard" id="rouletteResultCard">
+              <div class="rouletteResultLabel">Last result</div>
+              <div class="rouletteResultValue" id="rouletteResultValue">—</div>
+            </div>
+            <div class="rouletteStatus" id="rouletteStatus">Place chips on the table, then spin.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="casinoOverlay hidden" id="blackjackOverlay">
+      <div class="blackjackModal">
+        <div class="blackjackModalHeader">
+          <div>
+            <div class="blackjackModalTitle">♠ Blackjack</div>
+            <div class="blackjackModalSub">Get closer to 21 than the dealer without going over. Blackjack pays 3:2.</div>
+          </div>
+          <button id="closeBlackjackBtn" type="button" class="miniCardBtn">Close</button>
+        </div>
+
+        <div class="blackjackModalBody">
+          <div class="blackjackSidebar">
+            <div class="bjSideCard">
+              <div class="bjSideLabel">Balance</div>
+              <div class="bjBalanceValue" id="bjBalanceValue">$0.00</div>
+            </div>
+
+            <div class="bjSideCard">
+              <div class="bjSideLabel">Bet amount</div>
+              <div class="bjAmountButtons" id="bjAmountButtons">
+                <button type="button" class="bjAmountBtn active" data-bj-amount="1">$1</button>
+                <button type="button" class="bjAmountBtn" data-bj-amount="2">$2</button>
+                <button type="button" class="bjAmountBtn" data-bj-amount="3">$3</button>
+                <button type="button" class="bjAmountBtn" data-bj-amount="4">$4</button>
+                <button type="button" class="bjAmountBtn" data-bj-amount="5">$5</button>
+              </div>
+            </div>
+
+            <button id="bjDealBtn" type="button" class="bjDealBtn">🃏 DEAL</button>
+
+            <div class="bjActionButtons hidden" id="bjActionButtons">
+              <button id="bjHitBtn" type="button" class="bjActionBtn bjHit">HIT</button>
+              <button id="bjStandBtn" type="button" class="bjActionBtn bjStand">STAND</button>
+              <button id="bjDoubleBtn" type="button" class="bjActionBtn bjDouble">DOUBLE DOWN</button>
+            </div>
+
+            <div class="bjStatus" id="bjStatus">Choose your bet and deal.</div>
+          </div>
+
+          <div class="blackjackTable">
+            <canvas id="bjDealerCanvas" width="80" height="104"></canvas>
+
+            <div class="bjDealerArea">
+              <div class="bjAreaLabel">Dealer <span id="bjDealerScore" class="bjScore"></span></div>
+              <div class="bjCards" id="bjDealerCards"></div>
+            </div>
+
+            <div class="bjResultBanner hidden" id="bjResultBanner"></div>
+
+            <div class="bjPlayerArea">
+              <div class="bjAreaLabel">You <span id="bjPlayerScore" class="bjScore"></span></div>
+              <div class="bjCards" id="bjPlayerCards"></div>
+            </div>
+
+            <div class="bjBetDisplay" id="bjBetDisplay"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toastContainer" id="toastContainer"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/game.js"></script>
+</body>
+</html>
