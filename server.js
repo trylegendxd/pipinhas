@@ -1364,14 +1364,6 @@ app.post("/api/credits/withdraw", requireAuth, async (req, res) => {
   }
 });
 
-// ─── SOLANA WALLET ROUTES ─────────────────────────────────────────────────────
-mountSolanaRoutes(app, pool, {
-  requireAuth,
-  addCreditsTx,
-  spendCreditsTx,
-  notifyUser,
-});
-
 app.get("/api/friends/search", requireAuth, async (req, res) => {
   try {
     const q = String(req.query.q || "").trim();
@@ -2814,6 +2806,14 @@ async function tick() {
 
 async function start() {
   await initDb();
+
+  // Mount Solana routes AFTER main DB tables exist
+  mountSolanaRoutes(app, pool, {
+    requireAuth,
+    addCreditsTx,
+    spendCreditsTx,
+    notifyUser,
+  });
 
   setInterval(() => {
     tick().catch((err) => {
