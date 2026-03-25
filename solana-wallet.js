@@ -279,7 +279,7 @@ async function verifyDepositTransaction({
  */
 async function sendWithdrawal({ toAddress, usdAmount }) {
   if (usdAmount < MIN_CASHOUT_USD) {
-    throw new Object.assign(new Error(`Minimum cashout is $${MIN_CASHOUT_USD}`), {
+    throw Object.assign(new Error(`Minimum cashout is $${MIN_CASHOUT_USD}`), {
       code: "BELOW_MIN_CASHOUT",
     });
   }
