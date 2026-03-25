@@ -46,7 +46,7 @@ const MAX_CELLS = 16;
 const SNAPSHOT_PADDING = 650;
 const MAX_CHAT_MESSAGES = 40;
 const START_MASS = 30;
-const REGISTER_BONUS = 5;
+const REGISTER_BONUS = 0;
 const BOT_FOOD_CAP = 200;
 
 const SPLIT_MERGE_DELAY_TICKS = 25 * TICK_RATE;
@@ -443,14 +443,6 @@ async function createUserWithBonus(username, passwordHash) {
     );
 
     const userId = Number(insertUser.rows[0].id);
-
-    await client.query(
-      `
-      INSERT INTO credit_transactions (user_id, type, amount, note)
-      VALUES ($1, $2, $3, $4)
-      `,
-      [userId, "register_bonus", REGISTER_BONUS, "Welcome bonus"]
-    );
 
     await client.query("COMMIT");
     return userId;
