@@ -1307,61 +1307,15 @@ app.get("/api/credits/history", requireAuth, async (req, res) => {
   }
 });
 
-app.post("/api/credits/add", requireAuth, async (req, res) => {
-  try {
-    const amount = Number(req.body?.amount || 0);
+// NOTE: /api/credits/add has been removed.
+// To deposit funds use POST /api/solana/deposit/create (real Solana on-chain deposit).
 
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return res.status(400).json({ error: "Invalid amount." });
-    }
-
-    const wallet = await addCreditsTx(
-      req.user.id,
-      amount,
-      "manual_add",
-      "Manual wallet top-up"
-    );
-
-    req.session.user.credits = wallet;
-    req.session.save(() => {});
-    res.json({ ok: true, wallet });
-  } catch (err) {
-    console.error("ADD CREDITS ERROR:", err);
-    res.status(500).json({ error: "Failed to add balance." });
-  }
-});
-
-app.post("/api/credits/withdraw", requireAuth, async (req, res) => {
-  try {
-    const amount = Number(req.body?.amount || 0);
-    const address = String(req.body?.address || "").trim();
-
-    if (!Number.isFinite(amount) || amount <= 0) {
-      return res.status(400).json({ error: "Invalid amount." });
-    }
-
-    if (!address) {
-      return res.status(400).json({ error: "Missing Solana wallet address." });
-    }
-
-    const wallet = await spendCreditsTx(
-      req.user.id,
-      amount,
-      "withdraw_request",
-      `Withdrawal request to ${address}`
-    );
-
-    req.session.user.credits = wallet;
-    req.session.save(() => {});
-    res.json({ ok: true, wallet, status: "requested" });
-  } catch (err) {
-    if (err.code === "INSUFFICIENT_CREDITS") {
-      return res.status(400).json({ error: "Not enough balance." });
-    }
-
-    console.error("WITHDRAW ERROR:", err);
-    res.status(500).json({ error: "Failed to create withdrawal request." });
-  }
+// /api/credits/withdraw is a legacy alias — clients should use POST /api/solana/withdraw directly.
+// We keep this stub so old clients get a clear error rather than a silent failure.
+app.post("/api/credits/withdraw", requireAuth, (req, res) => {
+  res.status(410).json({
+    error: "This endpoint is deprecated. Use POST /api/solana/withdraw with { usdAmount, toAddress }.",
+  });
 });
 
 app.get("/api/friends/search", requireAuth, async (req, res) => {
