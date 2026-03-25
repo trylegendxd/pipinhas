@@ -2762,7 +2762,7 @@ registerBtn?.addEventListener("click", async () => {
       console.error("POST-REGISTER MENU REFRESH ERROR:", err);
     }
 
-    setMenuStatus("Welcome bonus received: $5.00");
+    setMenuStatus("Account created successfully!");
   } catch (err) {
     console.error("REGISTER ERROR:", err);
     setAuthStatus("Failed to register.", true);
