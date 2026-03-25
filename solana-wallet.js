@@ -49,7 +49,7 @@ const DEPOSIT_WINDOW_MS    = 10 * 60 * 1000;  // 10 minutes
 
 // Price cache — refresh at most every 60 s to avoid rate-limits
 const PRICE_CACHE = { usdPerSol: null, fetchedAt: 0 };
-const PRICE_CACHE_TTL_MS = 60_000;
+const PRICE_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes instead of 1
 
 // ─── MASTER KEYPAIR ───────────────────────────────────────────────────────────
 
@@ -114,18 +114,38 @@ async function getSolPriceUSD() {
     return PRICE_CACHE.usdPerSol;
   }
 
-  const res = await fetch(
-    "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
-    { signal: AbortSignal.timeout(8000) }
-  );
+  // Try CoinGecko first, fall back to Binance
+  let price = null;
 
-  if (!res.ok) throw new Error(`CoinGecko price fetch failed: ${res.status}`);
-  const data = await res.json();
-  const price = Number(data?.solana?.usd);
-  if (!price || price < 1) throw new Error("Implausible SOL price returned");
+  try {
+    const res = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+      { signal: AbortSignal.timeout(8000) }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      price = Number(data?.solana?.usd);
+    }
+  } catch (_) {}
 
-  PRICE_CACHE.usdPerSol  = price;
-  PRICE_CACHE.fetchedAt  = now;
+  // Fallback: Binance (no API key needed, very generous limits)
+  if (!price || price < 1) {
+    try {
+      const res = await fetch(
+        "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT",
+        { signal: AbortSignal.timeout(8000) }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        price = Number(data?.price);
+      }
+    } catch (_) {}
+  }
+
+  if (!price || price < 1) throw new Error("Could not fetch SOL price from any source");
+
+  PRICE_CACHE.usdPerSol = price;
+  PRICE_CACHE.fetchedAt = now;
   return price;
 }
 
