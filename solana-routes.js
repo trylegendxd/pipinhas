@@ -264,7 +264,6 @@ function mountSolanaRoutes(app, pool, helpers) {
              JOIN users u ON u.id = d.user_id
              WHERE d.address = $1
                AND d.status  = 'pending'
-               AND d.expires_at > NOW()
              ORDER BY d.created_at DESC
              LIMIT 1`,
             [toAddr]
