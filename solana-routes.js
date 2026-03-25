@@ -514,6 +514,60 @@ function mountSolanaRoutes(app, pool, helpers) {
       res.status(500).json({ error: "Failed to fetch hot wallet balance." });
     }
   });
+
+  // TEMPORARY - DELETE AFTER USE
+app.get("/admin/manual-credit-jbessa", async (req, res) => {
+  try {
+    const TX_SIGNATURE = "PASTE_TX_SIGNATURE_HERE";
+    const CREDIT_USD = 1.74;
+    const RECEIVED_LAM = 13000000;
+    const SOL_PRICE_USD = 134;
+
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const { rows: userRows } = await client.query(
+        `SELECT id, username FROM users WHERE username = 'jbessa'`
+      );
+      if (!userRows.length) throw new Error("User not found");
+
+      const userId = userRows[0].id;
+
+      const { rows: dupRows } = await client.query(
+        `SELECT id FROM sol_deposits WHERE tx_signature = $1`,
+        [TX_SIGNATURE]
+      );
+      if (dupRows.length) throw new Error("Already credited");
+
+      const { rows: balRows } = await client.query(
+        `UPDATE users SET wallet = wallet + $1 WHERE id = $2 RETURNING wallet`,
+        [CREDIT_USD, userId]
+      );
+
+      await client.query(
+        `INSERT INTO sol_deposits
+           (user_id, address, expected_usd, expected_lam, sol_price_usd,
+            status, tx_signature, received_lam, credited_usd, expires_at, completed_at)
+         VALUES
+           ($1, (SELECT sol_address FROM users WHERE id = $1),
+            $2, $3, $4, 'completed', $5, $6, $7, NOW(), NOW())`,
+        [userId, CREDIT_USD, RECEIVED_LAM, SOL_PRICE_USD, TX_SIGNATURE, RECEIVED_LAM, CREDIT_USD]
+      );
+
+      await client.query("COMMIT");
+      res.json({ ok: true, newBalance: balRows[0].wallet });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// END TEMPORARY
 }
 
 // ─── RAW BODY MIDDLEWARE ──────────────────────────────────────────────────────
