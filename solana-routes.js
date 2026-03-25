@@ -63,8 +63,12 @@ async function initSolanaDb(pool) {
   `);
 
   await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_sol_deposits_user    ON sol_deposits(user_id);
-    CREATE INDEX IF NOT EXISTS idx_sol_deposits_address ON sol_deposits(address);
+    CREATE INDEX IF NOT EXISTS idx_sol_deposits_user ON sol_deposits(user_id)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_sol_deposits_address ON sol_deposits(address)
+  `);
+  await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_sol_deposits_txsig
       ON sol_deposits(tx_signature) WHERE tx_signature IS NOT NULL
   `);
@@ -496,8 +500,14 @@ function mountSolanaRoutes(app, pool, helpers) {
     }
   });
 
-  // ── GET /api/admin/hot-wallet (protect this in production!) ───────────────
+  // ── GET /api/admin/hot-wallet ──────────────────────────────────────────────
+  // IMPORTANT: restrict this to admin users only in production.
   app.get("/api/admin/hot-wallet", requireAuth, async (req, res) => {
+    // Only allow the account whose username is "admin" (or set ADMIN_USERNAME env var)
+    const adminUsername = process.env.ADMIN_USERNAME || "admin";
+    if (req.user.username !== adminUsername) {
+      return res.status(403).json({ error: "Forbidden." });
+    }
     try {
       const balance = await getHotWalletBalance();
       res.json({ ok: true, ...balance });
